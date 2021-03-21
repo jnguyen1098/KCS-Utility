@@ -658,16 +658,20 @@ def menu(dosbox_location,device_id,baud,auto_name):
     if menu_option == '6':
         quit()
 
-dosbox_location, device_id, baud, auto_name = init_dos(False)
-#Working directory
-cwd = os.getcwd()
+def main():
+    dosbox_location, device_id, baud, auto_name = init_dos(False)
+    #Working directory
+    cwd = os.getcwd()
+    
+    while True:
+        if os.path.isfile("pyKCSconfig.txt"):
+            file = open("pyKCSconfig.txt","r")
+            lines = file.readlines()
+            dosbox_location = lines[0].rstrip()
+            device_id = int(lines [1].rstrip())
+            baud = lines[2].rstrip()
+            auto_name = lines[3].rstrip()     
+        menu(dosbox_location,device_id,baud,auto_name)
 
-while True:
-    if os.path.isfile("pyKCSconfig.txt"):
-        file = open("pyKCSconfig.txt","r")
-        lines = file.readlines()
-        dosbox_location = lines[0].rstrip()
-        device_id = int(lines [1].rstrip())
-        baud = lines[2].rstrip()
-        auto_name = lines[3].rstrip()     
-    menu(dosbox_location,device_id,baud,auto_name)
+if __name__ == "__main__":
+    main()
