@@ -3,3 +3,4 @@ stdout.txt
 *.wav
 pyKCSconfig.txt
 settings.json
+*.swp
