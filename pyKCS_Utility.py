@@ -348,89 +348,106 @@ def record_wav(auto_name, list_meta):
                         if start_time == 0:
                             start_time = time.time()
                         elapsed_time = time.time() - start_time
-                    print("Recording \"%s\", Size: %.1fkb, Recording at: %.2fdb, Time left: %ds, Press esc to abort " % (file_name,file_size,decibel,int(file_length) - elapsed_time),end = '\r')
+                    print(
+                        'Recording "%s", Size: %.1fkb, Recording at: %.2fdb, Time left: %ds, Press esc to abort '
+                        % (
+                            file_name,
+                            file_size,
+                            decibel,
+                            int(file_length) - elapsed_time,
+                        ),
+                        end="\r",
+                    )
                 else:
-                    print("Recording file data... %.2f decibels press esc to abort                                   " % (decibel),end = '\r')
-            #data2 = stream.read(chunk)
+                    print(
+                        "Recording file data... %.2f decibels press esc to abort                                   "
+                        % (decibel),
+                        end="\r",
+                    )
+            # data2 = stream.read(chunk)
             recorded = 1
             frames.append(data)
-        if recorded == 1 and decibel < -7: #detects data is done
+        if recorded == 1 and decibel < -7:  # detects data is done
             break
-        if keyboard.is_pressed('esc'): #abort
+        if keyboard.is_pressed("esc"):  # abort
             break
-            
+
     stream.stop_stream()
     stream.close()
-    
+
     p.terminate()
 
-    keyboard.press('backspace')
-    
-    #delete blank spots from start (i hope this fixes the garbage byte)
+    keyboard.press("backspace")
+
+    # delete blank spots from start (i hope this fixes the garbage byte)
     if len(frames) > 5:
         for i in range(5):
             frames.pop(0)
 
-    wf = wave.open("output2.wav", 'wb')
+    wf = wave.open("output2.wav", "wb")
     wf.setnchannels(channels)
     wf.setsampwidth(p.get_sample_size(sample_format))
     wf.setframerate(fs)
-    wf.writeframes(b''.join(frames))
+    wf.writeframes(b"".join(frames))
     wf.close()
-    
+
     sys.stdout.flush()
-    
-    #Convert to 8 bit unsigned pcm (create new file and delete old)
-    data, samplerate = soundfile.read('output2.wav')
-    soundfile.write('output.wav',data, fs, subtype='PCM_U8')
-    
+
+    # Convert to 8 bit unsigned pcm (create new file and delete old)
+    data, samplerate = soundfile.read("output2.wav")
+    soundfile.write("output.wav", data, fs, subtype="PCM_U8")
+
     os.remove("output2.wav")
 
     if auto_name == "Y" or auto_name == "y":
-        decode_file("output.wav","kcs_metadata.tmp")
+        decode_file("output.wav", "kcs_metadata.tmp")
         auto_name = "N"
         list_meta = True
-        record_wav(auto_name,list_meta)
+        record_wav(auto_name, list_meta)
         auto_name = "Y"
     elif auto_name == "N" and list_meta == True:
-        print("Decoding file: %s, file size: %.1fkb                                                                                        " % (file_name ,file_size))
+        print(
+            "Decoding file: %s, file size: %.1fkb                                                                                        "
+            % (file_name, file_size)
+        )
         infile = "output.wav"
         while not os.path.isfile(infile):
             print("File not found. Make sure the file is in the currect directory.")
             infile = input("Input WAV filename:")
-        decode_file(infile,file_name)
+        decode_file(infile, file_name)
     else:
-        decode_option = input("Generated \"output.wav\" would you like to decode? (Y/N):")
+        decode_option = input('Generated "output.wav" - decode? (Y/N): ')
 
-        while decode_option != "y" and decode_option != "Y" and decode_option != "n" and decode_option != "N":
+        while decode_option.lower() not in ["y", "n"]:
             print("Invalid input.")
-            decode_option = input("Generated \"output.wav\" would you like to decode? (Y/N):")
+            decode_option = input('Generated "output.wav" - decode? (Y/N): ')
 
-        #open decoded file 
-        if decode_option == "Y" or decode_option == "y":
+        # open decoded file
+        if decode_option.lower() == "y":
             infile = "output.wav"
             while not os.path.isfile(infile):
                 print("File not found. Make sure the file is in the currect directory.")
                 infile = input("Input WAV filename:")
             outfile = input("Output filename:")
-            decode_file(infile,outfile)
-        
+            decode_file(infile, outfile)
 
-#initize dosbox location and devices and baud (longer than it has to be could seperate each option into new fcn to revoic repeating)
+
+# initialize dosbox location and devices and baud (longer than it has
+# to be; could seperate each option into new fcn to revoic repeating)
 def init_dos(from_settings):
 
     if from_settings == True:
 
         setting_option = input("Select option:")
-        
-        while setting_option != '1' and setting_option != '2' and setting_option != '3' and setting_option != '4':
+
+        while setting_option not in ["1", "2", "3", "4"]:
             print("\nNot an option please select 1-3\n")
             setting_option = input("Select option:")
 
-        with open("pyKCSconfig.txt", 'r') as settings:
+        with open("pyKCSconfig.txt", "r") as settings:
             lines = settings.readlines()
 
-        if setting_option == '1':
+        if setting_option == "1":
 
             dosbox_location = input("Please input the filepath for DOSBox.exe\n"\
                                 "For example C:\\Program Files (x86)\\DOSBox-0.74-3\\DOSBox.exe\n"\
