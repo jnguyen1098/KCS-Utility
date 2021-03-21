@@ -1,20 +1,29 @@
-import subprocess
+#!/usr/bin/env python3
+
+import math
 import os
-import math 
-import wave, sys, pyaudio
-import time
-import keyboard
 import struct
+import subprocess
+import sys
+import time
+import wave
 from functools import reduce
+
+import keyboard
+import pyaudio
 import soundfile
 
-#Open dosbox    
+
 def run_dosbox(args):
-    return subprocess.call(reduce(lambda x, y: x  + ["-noconsole"] + ["-c"]  + [y], args, [dosbox_location] ))
+    return subprocess.call(
+        reduce(lambda x, y: x + ["-noconsole"] + ["-c"] + [y], args, [dosbox_location])
+    )
+
 
 def truncate_float(value, digits_after_point=2):
     pow_10 = 10 ** digits_after_point
     return (float(int(value * pow_10))) / pow_10
+
 
 def encode_file():
     print("\nEncode file")
@@ -27,8 +36,8 @@ def encode_file():
     if os.path.isfile("toEncode.mjr"):
         os.remove("toEncode.mjr")
 
-    os.rename(infile,"toEncode.mjr")
-    
+    os.rename(infile, "toEncode.mjr")
+
     outfile = input("Output WAV filename:")
 
     if baud == "300":
@@ -36,88 +45,92 @@ def encode_file():
     if baud == "1200":
         KCS = "KCS -M -Y -U -L5 " + "toEncode.mjr" + " " + "encode.wav"
 
-    dosbox_args = [r'mount c ' + cwd,'C:',KCS,'exit']
+    dosbox_args = [r"mount c " + cwd, "C:", KCS, "exit"]
 
     if os.path.isfile(outfile):
         os.remove(outfile)
 
     run_dosbox(dosbox_args)
 
-    os.rename("toEncode.mjr",infile)
-    os.rename("encode.wav",outfile)
+    os.rename("toEncode.mjr", infile)
+    os.rename("encode.wav", outfile)
 
+    play_audio = input('Would you like to play "' + outfile + '"? (Y/N):')
 
-    play_audio = input("Would you like to play \"" + outfile +"\"? (Y/N):")
-
-    while play_audio != "y" and play_audio != "Y" and play_audio != "n" and play_audio != "N":
+    while play_audio.lower() not in ["y", "n"]:
         print("Invalid input.")
-        play_audio = input("Would you like to play \"" + outfile +"\"? (Y/N):")
+        play_audio = input('Would you like to play"' + outfile + '"? (Y/N):')
 
     if play_audio == "Y" or play_audio == "y":
-        play_wav(outfile,infile,auto_name)
+        play_wav(outfile, infile, auto_name)
 
-def decode_file(infile,outfile):
+
+def decode_file(infile, outfile):
 
     while not os.path.isfile(infile):
         print("File not found. Make sure the file is in the currect directory.")
         infile = input("Input WAV filename:")
-    
+
     if os.path.isfile("toDecode.wav"):
         os.remove("toDecode.wav")
 
-    os.rename(infile,"toDecode.wav")
+    os.rename(infile, "toDecode.wav")
 
-    #choose the right baud and make KCS command to send to dosbox
+    # Choose the right baud and make KCS command to send to DosBOX
     if baud == "300":
         KCS = "KCS -Y " + "toDecode.wav" + " " + "decode.mjr"
     if baud == "1200":
         KCS = "KCS -Y -U " + "toDecode.wav" + " " + "decode.mjr"
 
-    dosbox_args = [r'mount c ' + cwd,'C:',KCS,'exit']
+    dosbox_args = [r"mount c " + cwd, "C:", KCS, "exit"]
 
-    #if theres already the file remove it and replace
+    # if theres already the file remove it and replace
     if os.path.isfile(outfile):
         os.remove(outfile)
 
     run_dosbox(dosbox_args)
 
-    os.rename("toDecode.wav",infile)
-    os.rename("decode.mjr",outfile)
+    os.rename("toDecode.wav", infile)
+    os.rename("decode.mjr", outfile)
 
-    #keeping this commented to atone for my sins
+    # keeping this commented to atone for my sins
 
-    #if infile == "output.wav" and baud == "1200":
-        #f = open(outfile, 'rb')
-        #f.seek(1) # skip the first 1 byte
-        #trim = f.read()
-        #f.close()
-        #trimmed = open(outfile, 'wb')
-        #trimmed.write(trim)
-        #trimmed.close()
-    if outfile != "kcs_metadata.tmp":    
-        open_decode = input("Would you like to open \"" + outfile +"\"? (Y/N):")
+    """
+    if infile == "output.wav" and baud == "1200":
+        f = open(outfile, 'rb')
+        f.seek(1) # skip the first 1 byte
+        trim = f.read()
+        f.close()
+        trimmed = open(outfile, 'wb')
+        trimmed.write(trim)
+        trimmed.close()
+    """
 
-        while open_decode != "y" and open_decode != "Y" and open_decode != "n" and open_decode != "N":
+    if outfile != "kcs_metadata.tmp":
+        open_decode = input('Would you like to open "' + outfile + '"? (Y/N):')
+
+        while open_decode.lower() not in ["y", "n"]:
             print("Invalid input.")
-            open_decode = input("Would you like to open \"" + outfile +"\"? (Y/N):")
+            open_decode = input('Would you like to open "' + outfile + '"? (Y/N): ')
 
-        #open decoded file 
-        if open_decode == "Y" or open_decode == "y":
-            os.startfile(outfile)    
+        # open decoded file
+        if open_decode.lower() == "y":
+            os.startfile(outfile)
 
-#Play audio
-def play_wav(wav_file,infile,auto_name):
 
-    #get meta data and encode then recursivly call to play meta data. after call it continues playing normal file
-    if auto_name == "y" or auto_name == "Y":
+def play_wav(wav_file, infile, auto_name):
 
-        print("Encoding file details... ", end = '\r')
+    # get meta data and encode then recursivly call to play meta data.
+    # after call it continues playing normal file
+    if auto_name.lower() == "y":
+
+        print("Encoding file details... ", end="\r")
 
         if os.path.isfile("kcs_metadata.tmp"):
             os.remove("kcs_metadata.tmp")
 
-        info_file = open("kcs_metadata.tmp" , "w")
-        info_file.write(infile +"\n") 
+        info_file = open("kcs_metadata.tmp", "w")
+        info_file.write(infile + "\n")
 
         if not os.path.isfile(infile):
             file_size = input("Please provide file size in kb:")
@@ -126,27 +139,28 @@ def play_wav(wav_file,infile,auto_name):
 
         info_file.write(file_size + "\n")
 
-        #get wav file duration
+        # get wav file duration
         wf = wave.open(wav_file)
         p = pyaudio.PyAudio()
         chunk = 1024
         rate = wf.getframerate()
         channels = wf.getnchannels()
         frames = wf.getnframes()
-        stream = p.open(format =
-                        p.get_format_from_width(wf.getsampwidth()),
-                        channels = wf.getnchannels(),
-                        rate = wf.getframerate(),
-                        output = True)
+        stream = p.open(
+            format=p.get_format_from_width(wf.getsampwidth()),
+            channels=wf.getnchannels(),
+            rate=wf.getframerate(),
+            output=True,
+        )
 
-        #get duration and set variables for the progress bar
+        # get duration and set variables for the progress bar
         duration = frames / float(rate)
         info_file.write(str(duration) + "\n")
 
         info_file.close()
 
-        os.rename("kcs_metadata.tmp","toEncode.mjr")
-    
+        os.rename("kcs_metadata.tmp", "toEncode.mjr")
+
         out_info_file = "kcs_metadata.wav"
 
         if baud == "300":
@@ -154,171 +168,180 @@ def play_wav(wav_file,infile,auto_name):
         if baud == "1200":
             KCS = "KCS -M -Y -U -L2 " + "toEncode.mjr" + " " + "encode.wav"
 
-        dosbox_args = [r'mount c ' + cwd,'C:',KCS,'exit']
+        dosbox_args = [r"mount c " + cwd, "C:", KCS, "exit"]
 
         if os.path.isfile(out_info_file):
             os.remove(out_info_file)
 
         run_dosbox(dosbox_args)
 
-        os.rename("toEncode.mjr","kcs_metadata.tmp")
-        os.rename("encode.wav",out_info_file)
+        os.rename("toEncode.mjr", "kcs_metadata.tmp")
+        os.rename("encode.wav", out_info_file)
         print("Ready to play!              ")
         auto_name = "N"
-        play_wav("kcs_metadata.wav","",auto_name)
+        play_wav("kcs_metadata.wav", "", auto_name)
         auto_name = "Y"
         os.remove("kcs_metadata.tmp")
         os.remove("kcs_metadata.wav")
-        #place gap between metadata and file so theres time to read the meta data when recording back (3 seconds might work but 5 is safe)
+        # place gap between metadata and file so theres time to read the meta data when recording back (3 seconds might work but 5 is safe)
         time.sleep(5)
 
     if auto_name == "N" or auto_name == "n":
         print("Press space to start playback:")
         sys.stdout.flush()
         while True:
-            if keyboard.is_pressed('space'):
+            if keyboard.is_pressed("space"):
                 break
-        #Count them in
+        # Count them in
         print("Get ready to record, playing in:")
-        count = ["3...","2...","1..."]
+        count = ["3...", "2...", "1..."]
         for i in range(3):
             if i == 0:
-                print("%s " % (count[0]),end = '\r')
+                print("%s " % (count[0]), end="\r")
             if i == 1:
-                print("%s%s " % (count[0],count[1]),end = '\r')
+                print("%s%s " % (count[0], count[1]), end="\r")
             if i == 2:
-                print("%s%s%s\n " % (count[0],count[1],count[2]))
+                print("%s%s%s\n " % (count[0], count[1], count[2]))
             sys.stdout.flush()
             time.sleep(1)
-    
-    #open wav and get information
+
+    # open wav and get information
     wf = wave.open(wav_file)
     p = pyaudio.PyAudio()
     chunk = 1024
     rate = wf.getframerate()
     channels = wf.getnchannels()
     frames = wf.getnframes()
-    stream = p.open(format =
-                    p.get_format_from_width(wf.getsampwidth()),
-                    channels = wf.getnchannels(),
-                    rate = wf.getframerate(),
-                    output = True)
+    stream = p.open(
+        format=p.get_format_from_width(wf.getsampwidth()),
+        channels=wf.getnchannels(),
+        rate=wf.getframerate(),
+        output=True,
+    )
 
-    #get duration and set variables for the progress bar
+    # get duration and set variables for the progress bar
     duration = frames / float(rate)
     if wav_file == "kcs_metadata.wav":
         print("Sending meta data...")
-    else:    
+    else:
         print("Playing: " + wav_file)
-   
+
     data = wf.readframes(chunk)
     start_time = time.time()
-    advance_point = duration / 50 #split the song sections to advance the bar
+    advance_point = duration / 50  # split the song sections to advance the bar
     progress_bar = [0.00]
-    progress_point = advance_point #total acumulated advancements throughout the song
-    bar_count = 0 #number of dots on bar
-    
-    #Print the initial bar
-    bar = '█' * bar_count
-    line = '-' * int(50 - bar_count)
+    progress_point = advance_point  # total acumulated advancements throughout the song
+    bar_count = 0  # number of dots on bar
+
+    # Print the initial bar
+    bar = "█" * bar_count
+    line = "-" * int(50 - bar_count)
     if wav_file != "kcs_metadata.wav":
-        print(' |%s%s|       ' % (bar,line),end ='\r')
+        print(" |%s%s|       " % (bar, line), end="\r")
     bar_count = 1
-    
+
     while True:
         elapsed_time = time.time() - start_time
         in_bar = False
         sys.stdout.flush()
-        
-        if truncate_float(elapsed_time,1) == truncate_float(progress_point,1):
+
+        if truncate_float(elapsed_time, 1) == truncate_float(progress_point, 1):
             for i in range(len(progress_bar)):
-                if truncate_float(elapsed_time,1) == progress_bar[i]:
+                if truncate_float(elapsed_time, 1) == progress_bar[i]:
                     in_bar = True
             if not in_bar and bar_count < 51:
                 sys.stdout.flush()
-                progress_bar.append(truncate_float(elapsed_time,1))
-                bar = '█' * bar_count
-                line = '-' * int(50 - bar_count)
-                print(' |%s%s| %d/%ds ' % (bar,line,elapsed_time,duration),end ='\r')
+                progress_bar.append(truncate_float(elapsed_time, 1))
+                bar = "█" * bar_count
+                line = "-" * int(50 - bar_count)
+                print(" |%s%s| %d/%ds " % (bar, line, elapsed_time, duration), end="\r")
                 progress_point += advance_point
                 bar_count += 1
-                
-        
-            
-        if data != '':
+
+        if data != "":
             stream.write(data)
             data = wf.readframes(chunk)
-        
-        if data == b'':
-            print('',end = '')
+
+        if data == b"":
+            print("", end="")
             break
 
-    #stop stream
+    # stop stream
     print("")
-    sys.stdout.flush()  
-    stream.stop_stream()  
-    stream.close()  
-
-    #close PyAudio  
-    p.terminate()
-    
-    keyboard.press('backspace')
     sys.stdout.flush()
-    
-def record_wav(auto_name,list_meta):
+    stream.stop_stream()
+    stream.close()
 
-    #recusive run list meta date for incoming file
+    # close PyAudio
+    p.terminate()
+    keyboard.press("backspace")
+    sys.stdout.flush()
+
+
+def record_wav(auto_name, list_meta):
+
+    # recusive run list meta date for incoming file
     if auto_name == "N" and list_meta == True:
         if os.path.isfile("kcs_metadata.tmp"):
-            info_file = open("kcs_metadata.tmp" , "r")
+            info_file = open("kcs_metadata.tmp", "r")
             lines = info_file.readlines()
             file_name = lines[0].rstrip()
-            file_size = float(lines [1].rstrip())
+            file_size = float(lines[1].rstrip())
             file_length = float(lines[2].rstrip())
             elapsed_time = 0
             start_time = 0
             info_file.close()
-            os.remove("kcs_metadata.tmp")   
+            os.remove("kcs_metadata.tmp")
 
-    #audio setup
+    # audio setup
     p = pyaudio.PyAudio()
     info = p.get_host_api_info_by_index(0)
 
     if list_meta == False:
-        print("Press space to start recording:")
+        print("Press space to start recording: ")
         sys.stdout.flush()
         while True:
-            if keyboard.is_pressed('space'):
+            if keyboard.is_pressed("space"):
                 break
-            
+
     chunk = 1024
-    sample_format = pyaudio.paInt16 #16 bit sample
+    sample_format = pyaudio.paInt16  # 16 bit sample
     channels = 1
     fs = 22050
-    
-    stream = p.open(format=sample_format,
-                channels=channels,
-                rate=fs,
-                frames_per_buffer=chunk,
-                input=True,
-                input_device_index=device_id)
-    
+
+    stream = p.open(
+        format=sample_format,
+        channels=channels,
+        rate=fs,
+        frames_per_buffer=chunk,
+        input=True,
+        input_device_index=device_id,
+    )
+
     frames = []
-    
+
     recorded = 0
-    sys.stdout.flush() #why the fuck am i still getting random things printing I DONT WANT THEM
-    #detects when incoming audio stream is higher than -7db. It only records then. This should get the data only
-    
+    sys.stdout.flush()  # why the fuck am i still getting random things printing I DONT WANT THEM
+    # detects when incoming audio stream is higher than -7db. It only records then. This should get the data only
+
     while True:
-        sys.stdout.flush()   
+        sys.stdout.flush()
         data = stream.read(chunk)
         rms_data = rms(data)
         decibel = 20 * math.log10(rms_data)
         if decibel < -7:
-            print("Listening for data... %.2f decibels press esc to abort                                           " % (decibel),end = '\r')
+            print(
+                "Listening for data... %.2f decibels press esc to abort                                           "
+                % (decibel),
+                end="\r",
+            )
         if decibel > -7:
             if auto_name == "Y" or auto_name == "y":
-                print("Recording meta data... %.2f decibels press esc to abort                                      " % (decibel),end = '\r')
+                print(
+                    "Recording meta data... %.2f decibels press esc to abort                                      "
+                    % (decibel),
+                    end="\r",
+                )
             else:
                 if auto_name == "N" and list_meta == True:
                     if elapsed_time <= file_length:
