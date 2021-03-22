@@ -66,7 +66,6 @@ def encode_file():
 
 
 def decode_file(infile, outfile):
-
     while not os.path.isfile(infile):
         print("File not found. Make sure the file is in the currect directory.")
         infile = input("Input WAV filename:")
@@ -119,7 +118,6 @@ def decode_file(infile, outfile):
 
 
 def play_wav(wav_file, infile, auto_name):
-
     # get meta data and encode then recursivly call to play meta data.
     # after call it continues playing normal file
     if auto_name.lower() == "y":
@@ -279,7 +277,6 @@ def play_wav(wav_file, infile, auto_name):
 
 
 def record_wav(auto_name, list_meta):
-
     # recusive run list meta date for incoming file
     if auto_name == "N" and list_meta == True:
         if os.path.isfile("kcs_metadata.tmp"):
@@ -447,6 +444,13 @@ def init_dos(from_settings):
         with open("pyKCSconfig.txt", "r") as settings:
             lines = settings.readlines()
 
+        if setting_option == "5":
+            dosbox_location = lines[0].rstrip()
+            device_id = int(lines [1].rstrip())
+            baud = lines[2].rstrip()
+            auto_name = lines[3].rstrip()    
+            return dosbox_location, device_id, baud , auto_name
+
         if setting_option == "1":
 
             print("Please input the filepath for DOSBox.exe")
@@ -531,6 +535,8 @@ def init_dos(from_settings):
    
         with open("pyKCSconfig.txt", 'w') as settings:
             settings.writelines( lines )
+
+        settings.close()
 
     if not os.path.isfile("pyKCSconfig.txt") and from_settings == False:
         dosbox_location = input("Please input the filepath for DOSBox.exe\n"\
@@ -622,7 +628,7 @@ def menu(dosbox_location,device_id,baud,auto_name):
 2.Decode file\n\
 3.Play WAV for cassette recording\n\
 4.Record cassette to WAV\n\
-5.Change settings (dosbox location, recording device, baud rate, meta data)\n\
+5.Change settings\n\
 6.Exit\n")
 
     menu_option = input("Select option:")
@@ -665,7 +671,7 @@ def menu(dosbox_location,device_id,baud,auto_name):
         record_wav(auto_name,False)
         
     if menu_option == '5':
-        print("\nSETTINGS\n1.Edit DOSBox location: \"%s\"\n2.Change default recording device: Device #: %s\n3.Select baud rate: %s baud\n4.Automatically encode meta data: %s" % (dosbox_location,device_id,baud,auto_name))
+        print("\nSETTINGS\n1.Edit DOSBox location: \"%s\"\n2.Change default recording device: Device #: %s\n3.Select baud rate: %s baud\n4.Automatically encode meta data: %s\n5.Go back to menu" % (dosbox_location,device_id,baud,auto_name))
         dosbox_location, device_id, baud, auto_name = init_dos(True)
 
     if menu_option == '6':
