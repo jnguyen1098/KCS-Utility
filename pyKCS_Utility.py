@@ -446,13 +446,12 @@ def init_dos(from_settings):
 
         if setting_option == "5":
             dosbox_location = lines[0].rstrip()
-            device_id = int(lines [1].rstrip())
+            device_id = int(lines[1].rstrip())
             baud = lines[2].rstrip()
-            auto_name = lines[3].rstrip()    
-            return dosbox_location, device_id, baud , auto_name
+            auto_name = lines[3].rstrip()
+            return dosbox_location, device_id, baud, auto_name
 
         if setting_option == "1":
-
             print("Please input the filepath for DOSBox.exe")
             print("For example, C:\\Program Files (x86)\\DOXBox-0.74-3\\DOSBox.exe")
             dosbox_location = input("You only have to do this once: ")
@@ -522,19 +521,24 @@ def init_dos(from_settings):
 
         if setting_option == "4":
 
-            auto_name = input("\nWould you like to automaticly store meta data for easier decoding?\nThis setting will encode and store the file name, size, and length with the file.\nWhen decoding it will automaticly give the file its correct name.\n\nEnable? (Y/N):")
-            while auto_name != "y" and auto_name != "Y" and auto_name != "n" and auto_name != "N":
+            print("\nWould you like to store file metadata for later convenience?")
+            print("This will encode the filename, size and length with the file")
+            print("When decoding, it will automatically restore the filenames.\n")
+            auto_name = input("Enable? (Y/N): ")
+            while auto_name.lower not in ["y", "n"]:
                 print("Invalid input.")
-                auto_name = input("\nWould you like to automaticly store meta data for easier decoding?\nThis setting will encode and store the file name, size, and length with the file.\nWhen decoding it will automaticly give the file its correct name.\n\nEnable? (Y/N):")
-            
-            lines[3] = auto_name + "\n"    
+                print("\nWould you like to store file metadata for later convenience?")
+                print("This will encode the filename, size and length with the file")
+                print("When decoding, it will automatically restore the filenames.\n")
+                auto_name = input("Enable? (Y/N): ")
+
+            lines[3] = auto_name + "\n"
             dosbox_location = lines[0].rstrip()
-            device_id = int(lines [1].rstrip())
+            device_id = int(lines[1].rstrip())
             baud = lines[2].rstrip()
-            
-   
-        with open("pyKCSconfig.txt", 'w') as settings:
-            settings.writelines( lines )
+
+        with open("pyKCSconfig.txt", "w") as settings:
+            settings.writelines(lines)
 
         settings.close()
 
