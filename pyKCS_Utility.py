@@ -449,61 +449,74 @@ def init_dos(from_settings):
 
         if setting_option == "1":
 
-            dosbox_location = input("Please input the filepath for DOSBox.exe\n"\
-                                "For example C:\\Program Files (x86)\\DOSBox-0.74-3\\DOSBox.exe\n"\
-                                "You only have to do this once:")
+            print("Please input the filepath for DOSBox.exe")
+            print("For example, C:\\Program Files (x86)\\DOXBox-0.74-3\\DOSBox.exe")
+            dosbox_location = input("You only have to do this once: ")
             while not os.path.isfile(dosbox_location):
                 print("File not found.")
-                dosbox_location = input("Please input the filepath for DOSBox.exe\n"\
-                                "For example C:\\Program Files (x86)\\DOSBox-0.74-3\\DOSBox.exe\n"\
-                                "You only have to do this once:")
+                print("Please input the filepath for DOSBox.exe")
+                print("For example, C:\\Program Files (x86)\\DOXBox-0.74-3\\DOSBox.exe")
+                dosbox_location = input("You only have to do this once: ")
 
             lines[0] = dosbox_location + "\n"
-            device_id = int(lines [1].rstrip())
+            device_id = int(lines[1].rstrip())
             baud = lines[2].rstrip()
-            auto_name = lines[3].rstrip()    
+            auto_name = lines[3].rstrip()
 
-        if setting_option == '2':
-
-            #get audio devices
+        if setting_option == "2":
+            # get audio devices
             p = pyaudio.PyAudio()
             info = p.get_host_api_info_by_index(0)
-            numdevices = info.get('deviceCount')
-        
-            print("\nSelect input device to record from (this should be your cassette player)\n")
-        
+            numdevices = info.get("deviceCount")
+
+            print("\nSelect input device to record from (should be cassette player)\n")
+
             rec_devices = 0
-        
+
             for i in range(0, numdevices):
-                if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                    print("Input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0, i).get('name'))
+                if (
+                    p.get_device_info_by_host_api_device_index(0, i).get(
+                        "maxInputChannels"
+                    )
+                ) > 0:
+                    print(
+                        "Input Device id ",
+                        i,
+                        " - ",
+                        p.get_device_info_by_host_api_device_index(0, i).get("name"),
+                    )
                     rec_devices += 1
-                
-            device_id = int(input("Device ID:"))  
-        
+
+            device_id = int(input("Device ID:"))
+
             while device_id >= rec_devices or device_id < 0:
                 print("Cant find that ID")
-                device_id = int(input("Device ID:")) 
+                device_id = int(input("Device ID:"))
 
             lines[1] = str(device_id) + "\n"
             dosbox_location = lines[0].rstrip()
             baud = lines[2].rstrip()
-            auto_name = lines[3].rstrip()    
+            auto_name = lines[3].rstrip()
 
-        if setting_option == '3':
-
-            baud = input("\nWould you like to encode at 300 or 1200 baud? (300 is easier for lower quality cassette recorders):")
+        if setting_option == "3":
+            baud = input(
+                "\nWould you like to encode at 300 or 1200 baud?\
+(300 is easier for lower quality cassette recorders):"
+            )
 
             while baud != "300" and baud != "1200":
                 print("Invalid choice")
-                baud = input("\nWould you like to encode at 300 or 1200 baud? (300 is easier for lower quality cassette recorders):")
+                baud = input(
+                    "\nWould you like to encode at 300 or 1200 baud?\
+(300 is easier for lower quality cassette recorders):"
+                )
 
-            lines[2] = baud + "\n"    
+            lines[2] = baud + "\n"
             dosbox_location = lines[0].rstrip()
-            device_id = int(lines [1].rstrip())
-            auto_name = lines[3].rstrip()    
+            device_id = int(lines[1].rstrip())
+            auto_name = lines[3].rstrip()
 
-        if setting_option == '4':
+        if setting_option == "4":
 
             auto_name = input("\nWould you like to automaticly store meta data for easier decoding?\nThis setting will encode and store the file name, size, and length with the file.\nWhen decoding it will automaticly give the file its correct name.\n\nEnable? (Y/N):")
             while auto_name != "y" and auto_name != "Y" and auto_name != "n" and auto_name != "N":
