@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Utility to streamline DOSBox KCS."""
+
 import math
 import os
 import struct
@@ -13,19 +15,30 @@ import keyboard
 import pyaudio
 import soundfile
 
+# TODO: turn all `in` [] into `in` ()
+# TODO: fix
+auto_name = None
+baud = None
+cwd = None
+device_id = None
+dosbox_location = None
+
 
 def run_dosbox(args):
+    """Run DOSBox with args."""
     return subprocess.call(
         reduce(lambda x, y: x + ["-noconsole"] + ["-c"] + [y], args, [dosbox_location])
     )
 
 
 def truncate_float(value, digits_after_point=2):
+    """Truncate float."""
     pow_10 = 10 ** digits_after_point
     return (float(int(value * pow_10))) / pow_10
 
 
 def encode_file():
+    """Write file to .WAV."""
     print("\nEncode file")
     infile = input("Input filename:")
 
@@ -61,11 +74,12 @@ def encode_file():
         print("Invalid input.")
         play_audio = input('Would you like to play"' + outfile + '"? (Y/N):')
 
-    if play_audio == "Y" or play_audio == "y":
+    if play_audio.lower() == "y":
         play_wav(outfile, infile, auto_name)
 
 
 def decode_file(infile, outfile):
+    """Decode file from .WAV."""
     while not os.path.isfile(infile):
         print("File not found. Make sure the file is in the currect directory.")
         infile = input("Input WAV filename:")
@@ -118,6 +132,7 @@ def decode_file(infile, outfile):
 
 
 def play_wav(wav_file, infile, auto_name):
+    """Play .WAV file using built-in player."""
     # get meta data and encode then recursivly call to play meta data.
     # after call it continues playing normal file
     if auto_name.lower() == "y":
@@ -142,7 +157,10 @@ def play_wav(wav_file, infile, auto_name):
         p = pyaudio.PyAudio()
         chunk = 1024
         rate = wf.getframerate()
-        channels = wf.getnchannels()
+
+        # TODO: this is assigned to but never used. Remove?
+        # channels = wf.getnchannels()
+
         frames = wf.getnframes()
         stream = p.open(
             format=p.get_format_from_width(wf.getsampwidth()),
@@ -181,10 +199,11 @@ def play_wav(wav_file, infile, auto_name):
         auto_name = "Y"
         os.remove("kcs_metadata.tmp")
         os.remove("kcs_metadata.wav")
-        # place gap between metadata and file so theres time to read the meta data when recording back (3 seconds might work but 5 is safe)
+        # place gap between metadata and file so theres time to read the
+        # metadata when recording back (3 seconds might work but 5 is safe)
         time.sleep(5)
 
-    if auto_name == "N" or auto_name == "n":
+    if auto_name.lower() == "n":
         print("Press space to start playback:")
         sys.stdout.flush()
         while True:
@@ -208,7 +227,10 @@ def play_wav(wav_file, infile, auto_name):
     p = pyaudio.PyAudio()
     chunk = 1024
     rate = wf.getframerate()
-    channels = wf.getnchannels()
+
+    # TODO: this is never assigned to. Remove?
+    # channels = wf.getnchannels()
+
     frames = wf.getnframes()
     stream = p.open(
         format=p.get_format_from_width(wf.getsampwidth()),
@@ -277,8 +299,9 @@ def play_wav(wav_file, infile, auto_name):
 
 
 def record_wav(auto_name, list_meta):
+    """Record .WAV file from device input."""
     # recusive run list meta date for incoming file
-    if auto_name == "N" and list_meta == True:
+    if auto_name == "N" and list_meta:
         if os.path.isfile("kcs_metadata.tmp"):
             info_file = open("kcs_metadata.tmp", "r")
             lines = info_file.readlines()
@@ -292,9 +315,11 @@ def record_wav(auto_name, list_meta):
 
     # audio setup
     p = pyaudio.PyAudio()
-    info = p.get_host_api_info_by_index(0)
 
-    if list_meta == False:
+    # TODO: assigned but never used. Remove?
+    # info = p.get_host_api_info_by_index(0)
+
+    if not list_meta:
         print("Press space to start recording: ")
         sys.stdout.flush()
         while True:
@@ -319,8 +344,8 @@ def record_wav(auto_name, list_meta):
 
     recorded = 0
     sys.stdout.flush()  # why the fuck am i still getting random things printing I DONT WANT THEM
-    # detects when incoming audio stream is higher than -7db. It only records then. This should get the data only
 
+    # detects when incoming audio stream is higher than -7db, then it records the data
     while True:
         sys.stdout.flush()
         data = stream.read(chunk)
@@ -328,25 +353,28 @@ def record_wav(auto_name, list_meta):
         decibel = 20 * math.log10(rms_data)
         if decibel < -7:
             print(
-                "Listening for data... %.2f decibels press esc to abort                                           "
+                "Listening for data... %.2f decibels press esc to abort\
+                                           "
                 % (decibel),
                 end="\r",
             )
         if decibel > -7:
-            if auto_name == "Y" or auto_name == "y":
+            if auto_name.lower() == "y":
                 print(
-                    "Recording meta data... %.2f decibels press esc to abort                                      "
+                    "Recording meta data... %.2f decibels press esc to abort\
+                                      "
                     % (decibel),
                     end="\r",
                 )
             else:
-                if auto_name == "N" and list_meta == True:
+                if auto_name == "N" and list_meta:
                     if elapsed_time <= file_length:
                         if start_time == 0:
                             start_time = time.time()
                         elapsed_time = time.time() - start_time
                     print(
-                        'Recording "%s", Size: %.1fkb, Recording at: %.2fdb, Time left: %ds, Press esc to abort '
+                        'Recording "%s", Size: %.1fkb, Recording at: %.2fdb, \
+Time left: %ds, Press esc to abort '
                         % (
                             file_name,
                             file_size,
@@ -357,7 +385,8 @@ def record_wav(auto_name, list_meta):
                     )
                 else:
                     print(
-                        "Recording file data... %.2f decibels press esc to abort                                   "
+                        "Recording file data... %.2f decibels press esc to abort\
+                                   "
                         % (decibel),
                         end="\r",
                     )
@@ -378,7 +407,7 @@ def record_wav(auto_name, list_meta):
 
     # delete blank spots from start (i hope this fixes the garbage byte)
     if len(frames) > 5:
-        for i in range(5):
+        for _ in range(5):
             frames.pop(0)
 
     wf = wave.open("output2.wav", "wb")
@@ -396,15 +425,16 @@ def record_wav(auto_name, list_meta):
 
     os.remove("output2.wav")
 
-    if auto_name == "Y" or auto_name == "y":
+    if auto_name.lower() == "y":
         decode_file("output.wav", "kcs_metadata.tmp")
         auto_name = "N"
         list_meta = True
         record_wav(auto_name, list_meta)
         auto_name = "Y"
-    elif auto_name == "N" and list_meta == True:
+    elif auto_name == "N" and list_meta:
         print(
-            "Decoding file: %s, file size: %.1fkb                                                                                        "
+            "Decoding file: %s, file size: %.1fkb                                               \
+                                         "
             % (file_name, file_size)
         )
         infile = "output.wav"
@@ -432,8 +462,8 @@ def record_wav(auto_name, list_meta):
 # initialize dosbox location and devices and baud (longer than it has
 # to be; could seperate each option into new fcn to revoic repeating)
 def init_dos(from_settings):
-
-    if from_settings == True:
+    """Initialize DOSBox location, devices, and baud."""
+    if from_settings:
 
         setting_option = input("Select option:")
 
@@ -507,7 +537,7 @@ def init_dos(from_settings):
 (300 is easier for lower quality cassette recorders):"
             )
 
-            while baud != "300" and baud != "1200":
+            while baud not in ("300", "1200"):
                 print("Invalid choice")
                 baud = input(
                     "\nWould you like to encode at 300 or 1200 baud?\
@@ -542,7 +572,7 @@ def init_dos(from_settings):
 
         settings.close()
 
-    if not os.path.isfile("pyKCSconfig.txt") and from_settings == False:
+    if not os.path.isfile("pyKCSconfig.txt") and not from_settings:
         print("Please input the filepath for DOSBox.exe.")
         print("For example, C:\\Program Files (x86)\\DOSBox-0.74-3\\DOXBox.exe")
         dosbox_location = input("You only have to do to this once: ")
@@ -617,7 +647,7 @@ def init_dos(from_settings):
 
         location_file.close()
 
-    elif from_settings == False:
+    elif not from_settings:
         location_file = open("pyKCSconfig.txt", "r")
         dosbox_location = location_file.readline().rstrip()
         device_id = int(location_file.readline().rstrip())
@@ -628,8 +658,8 @@ def init_dos(from_settings):
     return dosbox_location, device_id, baud, auto_name
 
 
-# Calculate decibels
 def rms(data):
+    """Calculate decibels."""
     count = len(data) / 2
     format = "%dh" % (count)
     shorts = struct.unpack(format, data)
@@ -642,6 +672,7 @@ def rms(data):
 
 # Menu options
 def menu(dosbox_location, device_id, baud, auto_name):
+    """Prompt for menu input from user."""
     print(
         "\nMENU\n\
 1.Encode file\n\
@@ -703,13 +734,14 @@ def menu(dosbox_location, device_id, baud, auto_name):
         dosbox_location, device_id, baud, auto_name = init_dos(True)
 
     if menu_option == "6":
-        quit()
+        sys.exit(0)
 
 
 def main():
+    """Drive main."""
     dosbox_location, device_id, baud, auto_name = init_dos(False)
-    # Working directory
-    cwd = os.getcwd()
+    # Working directory. TODO: variable never used
+    # cwd = os.getcwd()
 
     while True:
         if os.path.isfile("pyKCSconfig.txt"):
