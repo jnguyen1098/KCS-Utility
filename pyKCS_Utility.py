@@ -566,134 +566,161 @@ def init_dos(from_settings):
         rec_devices = 0
 
         for i in range(0, numdevices):
-            if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                print("Input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0, i).get('name'))
+            if (
+                p.get_device_info_by_host_api_device_index(0, i).get("maxInputChannels")
+                > 0
+            ):
+                print(
+                    "Input Device id ",
+                    i,
+                    " - ",
+                    p.get_device_info_by_host_api_device_index(0, i).get("name"),
+                )
                 rec_devices += 1
-                
-        device_id = int(input("Device ID:"))  
-        
+
+        device_id = int(input("Device ID:"))
+
         while device_id > rec_devices or device_id < 0:
             print("Cant find that ID")
             device_id = int(input("Device ID:"))
-            
 
         location_file.write(str(device_id) + "\n")
 
-        baud = input("\nWould you like to encode at 300 or 1200 baud? (300 is easier for lower quality cassette recorders):")
+        print("\nWould you like to encode at 300 or 1200 baud?")
+        print("(300 is easier for lower-quality cassette recorders)")
+        baud = input("Baud: ")
 
         while baud != "300" and baud != "1200":
             print("Invalid choice")
-            baud = input("\nWould you like to encode at 300 or 1200 baud? (300 is easier for lower quality cassette recorders):")
+            print("\nWould you like to encode at 300 or 1200 baud?")
+            print("(300 is easier for lower-quality cassette recorders)")
+            baud = input("Baud: ")
 
         location_file.write(baud)
         location_file.write("\n")
 
+        print("\nWould you like to store file metadata for later convenience?")
+        print("This will encode the filename, size and length with the file")
+        print("When decoding, it will automatically restore the filenames.\n")
+        auto_name = input("Enable? (Y/N): ")
 
-        auto_name = input("\nWould you like to automaticly store meta data for easier decoding?\nThis setting will encode and store the file name, size, and length with the file.\nWhen decoding it will automaticly give the file its correct name.\n\nEnable? (Y/N):")
-
-        while auto_name != "y" and auto_name != "Y" and auto_name != "n" and auto_name != "N":
+        while auto_name.lower() not in ["y", "n"]:
             print("Invalid input.")
-            auto_name = input("\nWould you like to automaticly store meta data for easier decoding?\nThis setting will encode and store the file name, size, and length with the file.\nWhen decoding it will automaticly give the file its correct name.\n\nEnable? (Y/N):")
+            print("\nWould you like to store file metadata for later convenience?")
+            print("This will encode the filename, size and length with the file")
+            print("When decoding, it will automatically restore the filenames.\n")
+            auto_name = input("Enable? (Y/N): ")
 
-        if auto_name == "Y" or auto_name == "y":
+        if auto_name.lower() == "y":
             location_file.write(auto_name)
             location_file.write("\n")
 
-        location_file.close()    
+        location_file.close()
 
     elif from_settings == False:
-        location_file = open("pyKCSconfig.txt","r")
+        location_file = open("pyKCSconfig.txt", "r")
         dosbox_location = location_file.readline().rstrip()
         device_id = int(location_file.readline().rstrip())
         baud = location_file.readline().rstrip()
         auto_name = location_file.readline().rstrip()
         location_file.close()
 
-    return dosbox_location, device_id, baud , auto_name
+    return dosbox_location, device_id, baud, auto_name
 
 
-#Calculate decibels
+# Calculate decibels
 def rms(data):
-    count = len(data)/2
-    format = "%dh"%(count)
-    shorts = struct.unpack( format, data )
+    count = len(data) / 2
+    format = "%dh" % (count)
+    shorts = struct.unpack(format, data)
     sum_squares = 0.0
     for sample in shorts:
-        n = sample * (1.0/32768)
-        sum_squares += n*n
-    return math.sqrt( sum_squares / count )
- 
-#Menu options
-def menu(dosbox_location,device_id,baud,auto_name):
-    #print(auto_name)
-    print("\nMENU\n\
+        n = sample * (1.0 / 32768)
+        sum_squares += n * n
+    return math.sqrt(sum_squares / count)
+
+
+# Menu options
+def menu(dosbox_location, device_id, baud, auto_name):
+    print(
+        "\nMENU\n\
 1.Encode file\n\
 2.Decode file\n\
 3.Play WAV for cassette recording\n\
 4.Record cassette to WAV\n\
 5.Change settings\n\
-6.Exit\n")
+6.Exit\n"
+    )
 
-    menu_option = input("Select option:")
+    menu_option = input("Select option: ")
 
-    while menu_option != '1' and menu_option != '2' and menu_option != '3' and menu_option != '4' and menu_option != '5' and menu_option != '6':
+    while menu_option not in ["1", "2", "3", "4", "5", "6"]:
         print("\nNot an option please select 1-6\n")
-        menu_option = input("Select option:")
+        menu_option = input("Select option: ")
 
-    #Call correct function
-    if menu_option == '1':
+    # Call correct function
+    if menu_option == "1":
         encode_file()
-    
-    if menu_option == '2':
+
+    if menu_option == "2":
         auto_name = "N"
         print("\nDecode file")
         infile = input("Input WAV filename:")
         while not os.path.isfile(infile):
-                print("File not found. Make sure the file is in the currect directory.")
-                infile = input("Input WAV filename:")
+            print("File not found. Make sure the file is in the currect directory.")
+            infile = input("Input WAV filename:")
         outfile = input("Output filename:")
-        decode_file(infile,outfile)
-      
-    if menu_option == '3':
+        decode_file(infile, outfile)
 
-        #default
+    if menu_option == "3":
+
         infile = ""
 
         file_to_play = input("Input WAV filename:")
         while not os.path.isfile(file_to_play):
             print("File not found.")
             file_to_play = input("Input WAV filename:")
-        
-        if(auto_name == "y" or auto_name == "Y"):
-            infile = input("Original filename:") 
-            play_wav(file_to_play,infile,auto_name)    
+
+        if auto_name.lower() == "y":
+            infile = input("Original filename:")
+            play_wav(file_to_play, infile, auto_name)
         else:
-            play_wav(file_to_play,infile,"N")
-        
-    if menu_option == '4':
-        record_wav(auto_name,False)
-        
-    if menu_option == '5':
-        print("\nSETTINGS\n1.Edit DOSBox location: \"%s\"\n2.Change default recording device: Device #: %s\n3.Select baud rate: %s baud\n4.Automatically encode meta data: %s\n5.Go back to menu" % (dosbox_location,device_id,baud,auto_name))
+            play_wav(file_to_play, infile, "N")
+
+    if menu_option == "4":
+        record_wav(auto_name, False)
+
+    if menu_option == "5":
+        print(
+            '\nSETTINGS\n\
+1.Edit DOSBox location: "%s"\n\
+2.Change default recording device: Device #: %s\n\
+3.Select baud rate: %s baud\n\
+4.Automatically encode meta data: %s\n\
+5.Go back to menu'
+            % (dosbox_location, device_id, baud, auto_name)
+        )
         dosbox_location, device_id, baud, auto_name = init_dos(True)
 
-    if menu_option == '6':
+    if menu_option == "6":
         quit()
+
 
 def main():
     dosbox_location, device_id, baud, auto_name = init_dos(False)
-    #Working directory
+    # Working directory
     cwd = os.getcwd()
-    
+
     while True:
         if os.path.isfile("pyKCSconfig.txt"):
-            file = open("pyKCSconfig.txt","r")
+            file = open("pyKCSconfig.txt", "r")
             lines = file.readlines()
             dosbox_location = lines[0].rstrip()
-            device_id = int(lines [1].rstrip())
+            device_id = int(lines[1].rstrip())
             baud = lines[2].rstrip()
-            auto_name = lines[3].rstrip()     
-        menu(dosbox_location,device_id,baud,auto_name)
+            auto_name = lines[3].rstrip()
+        menu(dosbox_location, device_id, baud, auto_name)
+
 
 if __name__ == "__main__":
     main()
