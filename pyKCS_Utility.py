@@ -543,29 +543,28 @@ def init_dos(from_settings):
         settings.close()
 
     if not os.path.isfile("pyKCSconfig.txt") and from_settings == False:
-        dosbox_location = input("Please input the filepath for DOSBox.exe\n"\
-                                "For example C:\\Program Files (x86)\\DOSBox-0.74-3\\DOSBox.exe\n"\
-                                "You only have to do this once:")
+        print("Please input the filepath for DOSBox.exe.")
+        print("For example, C:\\Program Files (x86)\\DOSBox-0.74-3\\DOXBox.exe")
+        dosbox_location = input("You only have to do to this once: ")
         while not os.path.isfile(dosbox_location):
             print("File not found.")
-            dosbox_location = input("Please input the filepath for DOSBox.exe\n"\
-                                "For example C:\\Program Files (x86)\\DOSBox-0.74-3\\DOSBox.exe\n"\
-                                "You only have to do this once:")
+            print("Please input the filepath for DOSBox.exe.")
+            print("For example, C:\\Program Files (x86)\\DOSBox-0.74-3\\DOXBox.exe")
+            dosbox_location = input("You only have to do to this once: ")
 
-        location_file = open("pyKCSconfig.txt","w")
+        location_file = open("pyKCSconfig.txt", "w")
         location_file.write(dosbox_location)
         location_file.write("\n")
-        
-        
-        #get audio devices
+
+        # get audio devices
         p = pyaudio.PyAudio()
         info = p.get_host_api_info_by_index(0)
-        numdevices = info.get('deviceCount')
-        
-        print("\nSelect input device to record from (this should be your cassette player)\n")
-        
+        numdevices = info.get("deviceCount")
+
+        print("\nSelect input device to record from (should be cassette player)\n")
+
         rec_devices = 0
-        
+
         for i in range(0, numdevices):
             if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
                 print("Input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0, i).get('name'))
